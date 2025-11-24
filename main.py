@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from datetime import datetime, date, time
@@ -254,7 +254,7 @@ async def health_check():
 @app.post("/api/availability")
 async def create_availability(
     availability: AvailabilityCreate,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     if user["role"] not in ["admin", "trainer"]:
@@ -276,7 +276,7 @@ async def create_availability(
 @app.get("/api/availability/trainer/{trainer_id}")
 async def get_trainer_availability(
     trainer_id: str,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     get_current_user(authorization)
 
@@ -290,7 +290,7 @@ async def get_trainer_availability(
 @app.delete("/api/availability/{availability_id}")
 async def delete_availability(
     availability_id: str,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     if user["role"] not in ["admin", "trainer"]:
@@ -310,7 +310,7 @@ async def delete_availability(
 @app.post("/api/bookings")
 async def create_booking(
     booking: BookingCreate,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     client_id = user["id"]
@@ -353,7 +353,7 @@ async def list_bookings(
     status: Optional[BookingStatus] = None,
     page: int = 1,
     limit: int = 20,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
 
@@ -402,7 +402,7 @@ async def list_bookings(
 @app.get("/api/bookings/{booking_id}")
 async def get_booking(
     booking_id: str,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     get_current_user(authorization)
 
@@ -419,7 +419,7 @@ async def get_booking(
 async def cancel_booking(
     booking_id: str,
     cancel: CancelBooking,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
 
@@ -447,7 +447,7 @@ async def cancel_booking(
 @app.put("/api/bookings/{booking_id}/complete")
 async def complete_booking(
     booking_id: str,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     if user["role"] not in ["admin", "trainer"]:
@@ -468,7 +468,7 @@ async def complete_booking(
 @app.post("/api/sessions/group")
 async def create_group_session(
     session: GroupSessionCreate,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     if user["role"] not in ["admin", "trainer"]:
@@ -489,7 +489,7 @@ async def create_group_session(
 async def list_group_sessions(
     page: int = 1,
     limit: int = 20,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     get_current_user(authorization)
 
@@ -518,7 +518,7 @@ async def list_group_sessions(
 @app.post("/api/sessions/group/{session_id}/enroll")
 async def enroll_in_group_session(
     session_id: str,
-    authorization: str = Depends(lambda: None)
+    authorization: str = Header(None, alias="Authorization")
 ):
     user = get_current_user(authorization)
     client_id = user["id"]
