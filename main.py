@@ -11,6 +11,9 @@ import os
 import json
 import logging
 from jose import JWTError, jwt
+import sys
+sys.path.append(os.path.dirname(__file__))
+from utils.http_client import validate_user, get_active_programs
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -315,6 +318,28 @@ async def create_booking(
     user = get_current_user(authorization)
     client_id = user["id"]
 
+    # Validate trainer exists
+    try:
+        trainer_data = await validate_user(booking.trainer_id, authorization)
+        if trainer_data["data"]["role"] != "trainer":
+            raise HTTPException(status_code=400, detail="Specified user is not a trainer")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ConnectionError:
+        logger.warning("User service unavailable, skipping trainer validation")
+
+    # Validate client has active program with trainer (optional check)
+    try:
+        programs = await get_active_programs(client_id, authorization)
+        if programs["success"] and len(programs["data"]) > 0:
+            has_program_with_trainer = any(
+                p.get("trainer_id") == booking.trainer_id for p in programs["data"]
+            )
+            if not has_program_with_trainer:
+                logger.warning(f"Client {client_id} booking with trainer {booking.trainer_id} without active program")
+    except Exception as e:
+        logger.warning(f"Could not verify active program: {e}")
+
     async with db_pool.acquire() as conn:
         # Check for conflicts
         conflict = await conn.fetchrow(
@@ -343,7 +368,9 @@ async def create_booking(
             "client_id": client_id,
             "trainer_id": booking.trainer_id,
             "booking_date": booking.booking_date.isoformat(),
-            "start_time": booking.start_time.isoformat()
+            "start_time": booking.start_time.isoformat(),
+            "end_time": booking.end_time.isoformat(),
+            "type": booking.type.value
         })
 
         return {"success": True, "data": dict(result)}
@@ -461,6 +488,24 @@ async def complete_booking(
 
         if not result:
             raise HTTPException(status_code=404, detail="Booking not found")
+
+        # Calculate duration in minutes
+        start_dt = datetime.combine(result["booking_date"], result["start_time"])
+        end_dt = datetime.combine(result["booking_date"], result["end_time"])
+        duration_minutes = int((end_dt - start_dt).total_seconds() / 60)
+
+        # Publish booking completed event
+        await publish_event("booking.completed", {
+            "booking_id": str(result["id"]),
+            "client_id": str(result["client_id"]),
+            "trainer_id": str(result["trainer_id"]),
+            "workout_date": result["booking_date"].isoformat(),
+            "start_time": result["start_time"].isoformat(),
+            "end_time": result["end_time"].isoformat(),
+            "duration_minutes": duration_minutes,
+            "trainer_notes": result.get("notes", "")
+        })
+
         return {"success": True, "data": dict(result)}
 
 # GROUP SESSION ENDPOINTS
