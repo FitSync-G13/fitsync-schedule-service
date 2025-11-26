@@ -346,7 +346,7 @@ async def create_booking(
             """SELECT id FROM bookings
                WHERE trainer_id = $1 AND booking_date = $2
                AND status != 'cancelled'
-               AND ((start_time, end_time) OVERLAPS ($3, $4))""",
+               AND ((start_time, end_time) OVERLAPS ($3::time, $4::time))""",
             booking.trainer_id, booking.booking_date, booking.start_time, booking.end_time
         )
 
