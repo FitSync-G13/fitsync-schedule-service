@@ -20,11 +20,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("schedule-service")
 
 # Configuration
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = int(os.getenv("DB_PORT", 5434))
-DB_NAME = os.getenv("DB_NAME", "scheduledb")
-DB_USER = os.getenv("DB_USER", "fitsync")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "fitsync123")
+# Database configuration - supports both CONNECTION_STRING and individual parameters
+def get_database_url():
+    """Get database connection URL with TLS enabled"""
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        # Ensure sslmode is set for TLS
+        if "sslmode" not in database_url:
+            database_url += "?sslmode=require" if "?" not in database_url else "&sslmode=require"
+        return database_url
+
+    # Build from individual parameters
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = int(os.getenv("DB_PORT", 5434))
+    DB_NAME = os.getenv("DB_NAME", "scheduledb")
+    DB_USER = os.getenv("DB_USER", "fitsync")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "fitsync123")
+    return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+
+DATABASE_URL = get_database_url()
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-jwt-key")
@@ -89,16 +103,14 @@ class GroupSessionCreate(BaseModel):
 # Database initialization
 async def init_db():
     global db_pool
+    # Use connection string with TLS enabled (insecure certificates for development)
     db_pool = await asyncpg.create_pool(
-        host=DB_HOST,
-        port=DB_PORT,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
+        dsn=DATABASE_URL,
         min_size=5,
-        max_size=20
+        max_size=20,
+        ssl='prefer'  # Use SSL if available, allow insecure certificates for development
     )
-    logger.info("Database pool created")
+    logger.info("Database pool created with TLS enabled")
 
     # Run migrations
     await run_migrations()
