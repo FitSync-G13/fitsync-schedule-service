@@ -26,8 +26,7 @@ logger = logging.getLogger("schedule-service")
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is required")
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-jwt-key")
 
 # Global connections
@@ -188,7 +187,7 @@ async def run_migrations():
 async def init_redis():
     global redis_client
     redis_client = await aioredis.from_url(
-        f"redis://{REDIS_HOST}:{REDIS_PORT}",
+        REDIS_URL,
         decode_responses=True
     )
     logger.info("Redis connected")
