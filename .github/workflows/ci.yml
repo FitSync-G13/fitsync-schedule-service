@@ -20,7 +20,7 @@ jobs:
       aws_region: us-east-2
       language: 'python'
       python_version: '3.11'
-      push_image: false
+      push_image: true
       run_tests: false
       fail_on_vulnerabilities: false
     secrets:
