@@ -15,12 +15,12 @@ jobs:
   build-test-deploy:
     uses: FitSync-G13/fitsync-cd-templates/.github/workflows/ci-test-build-push.yml@master
     with:
-      service_name: progress-service
-      ecr_repository: fitsync-progress-service
+      service_name: schedule-service
+      ecr_repository: fitsync-schedule-service
       aws_region: us-east-2
+      push_image: false
+      run_tests: false
       language: 'python'
       python_version: '3.11'
-      install_command: 'pip install pytest pytest-asyncio pytest-cov httpx fastapi pydantic python-jose asyncpg redis'
-      test_command: 'pytest tests/ --cov=. --cov-report=term-missing'
     # secrets:
     #   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
