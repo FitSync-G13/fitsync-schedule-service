@@ -18,9 +18,10 @@ jobs:
       service_name: schedule-service
       ecr_repository: fitsync-schedule-service
       aws_region: us-east-2
-      push_image: false
-      run_tests: false
       language: 'python'
       python_version: '3.11'
-    # secrets:
-    #   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      push_image: false
+      run_tests: false
+      fail_on_vulnerabilities: false
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
