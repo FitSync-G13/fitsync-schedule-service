@@ -1,0 +1,25 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+permissions:
+  id-token: write          # Required for requesting the JWT (AWS OIDC)
+  contents: read           # Required for actions/checkout
+  security-events: write   # Required for uploading Trivy scan results
+
+jobs:
+  build-test:
+    uses: FitSync-G13/fitsync-cd-templates/.github/workflows/ci-test-build-push.yml@master
+    with:
+      service_name: schedule-service
+      ecr_repository: fitsync-schedule-service
+      aws_region: us-east-2
+      language: 'node'
+      node_version: '18'
+      push_image: false
+    # secrets:
+    #   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
