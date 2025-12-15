@@ -23,7 +23,7 @@ jobs:
       ecr_repository: fitsync-schedule-service
       language: 'python'
       python_version: '3.11'
-      test_command: 'echo "No tests configured"'
+      run_tests: false
       run_e2e_tests: false
       skip_security_scan: false
 
