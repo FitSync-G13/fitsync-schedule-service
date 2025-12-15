@@ -104,9 +104,9 @@ Service runs on http://localhost:8003
 ## Database Schema
 
 Main tables:
-- `bookings` - Training session bookings
-- `availability` - Trainer availability slots
-- `sessions` - Completed sessions
+- `bookings`        - Training session bookings
+- `availability`    - Trainer availability slots
+- `sessions`        - Completed sessions
 
 ## More Information
 
