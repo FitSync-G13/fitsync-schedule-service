@@ -7,13 +7,29 @@ on:
     branches: [ "main", "dev" ]
 
 permissions:
-  id-token: write          # Required for requesting the JWT (AWS OIDC)
-  contents: read           # Required for actions/checkout
-  security-events: write   # Required for uploading Trivy scan results
+  id-token: write
+  contents: read
+  pull-requests: write
+  security-events: write
+  checks: write
 
 jobs:
-  build-test-deploy:
+  pr-quality-gates:
+    name: PR Quality Gates
+    if: github.event_name == 'pull_request'
+    uses: FitSync-G13/fitsync-cd-templates/.github/workflows/ci-pr-quality-gates.yml@master
+    with:
+      service_name: schedule-service
+      ecr_repository: fitsync-schedule-service
+      language: 'python'
+      python_version: '3.11'
+      test_command: 'echo "No tests configured"'
+      run_e2e_tests: false
+      skip_security_scan: false
+
+  build-test-push:
     uses: FitSync-G13/fitsync-cd-templates/.github/workflows/ci-test-build-push.yml@master
+    if: github.event_name == 'push'
     with:
       service_name: schedule-service
       ecr_repository: fitsync-schedule-service
