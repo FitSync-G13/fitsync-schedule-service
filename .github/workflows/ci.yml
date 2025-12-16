@@ -53,3 +53,14 @@ jobs:
       environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     secrets:
       AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+  trigger-deployment:
+    name: Trigger Deployment Update
+    needs: build-test-push
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    uses: FitSync-G13/fitsync-cd-templates/.github/workflows/trigger-deployment-simple.yml@master
+    with:
+      service_name: schedule-service
+      image_tag: ${{ github.ref == 'refs/heads/main' && 'prod-latest' || 'dev-latest' }}
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    secrets:
+      DEPLOYMENT_TOKEN: ${{ secrets.DEPLOYMENT_TOKEN }}
